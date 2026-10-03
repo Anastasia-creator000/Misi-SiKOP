@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MISI SiKOP: Menyelamatkan Kerajaan</title>
+<style>
+:root{--bg:#10172f;--card:#1c2850;--gold:#ffd86b;--cyan:#69e7ff;--pink:#ff86c8;--green:#8df0a9;--text:#f8fbff}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:radial-gradient(circle at top,#293a75,#10172f 65%);color:var(--text);min-height:100vh}
+button,input{font:inherit}button{cursor:pointer;border:0;border-radius:16px;padding:13px 20px;font-weight:800}
+#app{max-width:1100px;margin:auto;padding:20px}.screen{display:none;min-height:90vh}.screen.active{display:block}
+.hero,.panel{background:rgba(28,40,80,.94);border:1px solid rgba(255,255,255,.12);border-radius:28px;padding:28px;box-shadow:0 18px 50px rgba(0,0,0,.28)}
+.hero{text-align:center;margin-top:5vh}.crown{font-size:70px}.title{font-size:clamp(32px,7vw,64px);margin:8px 0;color:var(--gold);line-height:1}.subtitle{font-size:20px;color:#dce8ff}.name{max-width:460px;margin:25px auto;display:flex;gap:10px}.name input{flex:1;padding:15px;border-radius:14px;border:2px solid #6073ad;background:#111a39;color:white}
+.primary{background:linear-gradient(135deg,#ffd86b,#ff9e67);color:#261d08}.secondary{background:#344779;color:white}
+.hud{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}.stat{background:#182448;border-radius:14px;padding:9px 13px}.stat b{color:var(--gold)}
+.map{position:relative;min-height:600px;background:linear-gradient(#223d62,#163d35);border-radius:28px;overflow:hidden;border:2px solid #536fa7}
+.map:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 30%,#4d8a5c 0 8%,transparent 9%),radial-gradient(circle at 80% 70%,#315f4e 0 10%,transparent 11%);opacity:.7}
+.location{position:absolute;width:220px;padding:20px;text-align:center;background:rgba(20,28,59,.94);border:2px solid var(--gold);border-radius:24px;color:white}
+.location h3{margin:5px 0;color:var(--gold)}.loc1{left:7%;top:12%}.loc2{right:7%;top:34%}.loc3{left:35%;bottom:8%}
+.locked{opacity:.45;filter:grayscale(.6)}.road{position:absolute;height:7px;background:#c69a60;border-radius:9px;transform-origin:left center}.r1{left:25%;top:31%;width:40%;transform:rotate(17deg)}.r2{left:55%;top:51%;width:30%;transform:rotate(125deg)}
+h2{color:var(--gold)}.mission-intro{text-align:center}.question{font-size:23px;line-height:1.45}.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:22px 0}.choice{background:#314678;color:white;border:2px solid transparent}.choice:hover{border-color:var(--cyan)}.choice.selected{border-color:var(--gold);background:#495e99}.feedback{padding:15px;border-radius:16px;margin:15px 0}.good{background:#174c39}.bad{background:#542d3d}.hint{background:#423c22;color:#fff1ae}
+.imagebox{min-height:170px;border-radius:20px;background:linear-gradient(135deg,#7bd8e8,#6683d5);display:grid;place-items:center;font-size:72px;margin:18px 0}
+.wordbank{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:20px 0}.word{background:#f3d56b;color:#251e0b;padding:11px 15px;border-radius:13px}
+.answer{min-height:55px;border:2px dashed #8da4e4;border-radius:16px;padding:10px;margin:12px 0;display:flex;gap:8px;flex-wrap:wrap}.answer .word{background:#8df0a9}
+.textanswer{width:100%;padding:15px;border-radius:14px;background:#101a39;border:2px solid #647ab8;color:white}
+.progress{height:12px;background:#111a35;border-radius:99px;overflow:hidden}.bar{height:100%;background:linear-gradient(90deg,var(--cyan),var(--gold));width:0}
+.footer{text-align:center;opacity:.75;margin:20px}
+.badges{display:flex;gap:12px;flex-wrap:wrap}.badge{background:#303f72;border-radius:18px;padding:15px}
+@media(max-width:650px){.location{width:170px;padding:12px}.loc1{left:3%;top:10%}.loc2{right:3%;top:37%}.loc3{left:25%;bottom:8%}}
+</style>
+</head>
+<body>
+<div id="app">
+
+<section id="home" class="screen active">
+<div class="hero">
+<div class="crown">👑</div>
+<div class="title">MISI SiKOP</div>
+<h2>MENYELAMATKAN KERAJAAN</h2>
+<p class="subtitle">Berani Berfikir, Bijak Membina Ayat!</p>
+<p>🤖 REX SiKOP: “Wira SiKOP! Perkataan telah bercampur dan ayat telah rosak. Bantu kami menyelamatkan kerajaan!”</p>
+<div class="name"><input id="nameInput" placeholder="Masukkan nama Wira SiKOP"><button class="primary" onclick="start()">⚔️ MULA MISI</button></div>
+<div id="nameError"></div>
+</div></section>
+
+<section id="map" class="screen">
+<div class="hud" id="hud"></div>
+<div class="panel"><h1>🗺️ PETA KERAJAAN SiKOP</h1><p>Pilih misi dan selamatkan kerajaan!</p>
+<div class="progress"><div class="bar" id="bar"></div></div></div><br>
+<div class="map">
+<div class="road r1"></div><div class="road r2"></div>
+<button class="location loc1" onclick="openMission(0)">🧠<h3>MENARA INGAT</h3><small>MISI 1 · Mengingat & Memahami</small></button>
+<button class="location loc2 locked" id="loc2" onclick="openMission(1)">⚔️<h3>KUBU APLIKASI</h3><small>MISI 2 · Mengaplikasi & Menganalisis</small></button>
+<button class="location loc3 locked" id="loc3" onclick="openMission(2)">👑<h3>ISTANA CIPTA</h3><small>MISI 3 · Menilai & Mencipta</small></button>
+</div></section>
+
+<section id="game" class="screen">
+<div class="hud" id="gameHud"></div>
+<div class="panel">
+<div id="missionTitle"></div><div class="progress"><div class="bar" id="qbar"></div></div>
+<div id="questionArea"></div>
+</div></section>
+
+<section id="finish" class="screen">
+<div class="hero">
+<div class="crown">🏆</div><div class="title">TAHNIAH!</div>
+<h2>KERajaan SiKOP TELAH DISELAMATKAN!</h2>
+<div id="report"></div>
+<div class="badges" id="badges"></div><br>
+<button class="primary" onclick="show('map')">🗺️ KEMBALI KE PETA</button>
+<button class="secondary" onclick="location.reload()">🔄 MAIN SEMULA</button>
+</div></section>
+<div class="footer">MISI SiKOP · Bahasa Melayu Tahun 4</div>
+</div>
+
+<script>
+const missions=[
+{title:"🧠 MISI 1 — KERAJAAN INGAT",type:"mcq",qs:[
+["Apakah maksud Si dalam SiKOP?",["Siapa","Kata Kerja","Objek","Penerangan"],0,"🧑‍🤝‍🧑"],
+["Apakah maksud K dalam SiKOP?",["Kampung","Kata Kerja","Keterangan","Kawan"],1,"🏃"],
+["Apakah maksud O dalam SiKOP?",["Orang","Objek","Operasi","Organisasi"],1,"📦"],
+["Apakah maksud P dalam SiKOP?",["Perbuatan","Penduduk","Penerangan","Perkataan"],2,"🔎"],
+["Dalam “Penduduk membersihkan taman.”, apakah Si?",["Penduduk","membersihkan","taman","tiada"],0,"🧹"],
+["Dalam “Jiran membantu warga emas.”, apakah K?",["Jiran","membantu","warga emas","emas"],1,"🤝"],
+["Dalam “Murid mengutip sampah di sekolah.”, apakah O?",["Murid","mengutip","sampah","di sekolah"],2,"🏫"],
+["Dalam “Penduduk menanam pokok di taman.”, apakah P?",["Penduduk","menanam","pokok","di taman"],3,"🌳"],
+["Siapakah yang melakukan perbuatan dalam gambar gotong-royong?",["Penduduk","Taman","Sampah","Ahad"],0,"🧹"],
+["Apakah kata kerja dalam situasi kanak-kanak membantu warga emas?",["kanak-kanak","membantu","warga emas","pasar"],1,"🤝"],
+["Apakah objek dalam situasi jiran berkongsi makanan?",["jiran","berkongsi","makanan","bersama"],2,"🍱"],
+["Dalam “Murid menanam pokok di sekolah.”, apakah O?",["Murid","menanam","pokok","sekolah"],2,"🌱"],
+["Dalam “Jiran membersihkan longkang pada pagi Ahad.”, apakah P?",["Jiran","membersihkan","longkang","pada pagi Ahad"],3,"🧹"],
+["Dalam “Kanak-kanak membantu guru.”, apakah Si?",["Kanak-kanak","membantu","guru","tiada"],0,"👧"],
+["Dalam “Penduduk mengadakan gotong-royong.”, apakah K?",["Penduduk","mengadakan","gotong-royong","kerajaan"],1,"🏘️"],
+["“Penduduk berkongsi makanan di balai raya.” Apakah susunan SiKOP?",["Penduduk-Kongsi-Makanan-Balai Raya","Penduduk-Makanan-Kongsi-Balai Raya","Makanan-Penduduk-Kongsi-Balai Raya","Penduduk-Balai Raya-Kongsi-Makanan"],0,"🍱"],
+["Tembak sasaran: pilih K dalam ayat “Jiran membersihkan taman.”",["Jiran","membersihkan","taman","di"],1,"🎯"],
+["Bola Kristal: apakah P dalam “Penduduk membantu mangsa banjir di pusat pemindahan.”?",["Penduduk","membantu","mangsa banjir","di pusat pemindahan"],3,"🌧️"],
+["Padankan: Penduduk / menolong / mangsa / di pusat pemindahan. Apakah O?",["Penduduk","menolong","mangsa","di pusat pemindahan"],2,"🤲"],
+["Cabaran pantas: “Jiran menyediakan makanan untuk majlis kejiranan.” Apakah K?",["Jiran","menyediakan","makanan","majlis"],1,"🍲"]
+]},
+{title:"⚔️ MISI 2 — KERAJAAN APLIKASI",type:"sort",qs:[
+["Susun perkataan menjadi ayat yang betul.",["penduduk","membersihkan","taman","pada hari Ahad"],"Penduduk membersihkan taman pada hari Ahad.","🧹"],
+["Susun: jiran / membantu / warga emas / di pasar.",["jiran","membantu","warga emas","di pasar"],"Jiran membantu warga emas di pasar.","🤝"],
+["Susun: murid / mengutip / sampah / di sekolah.",["murid","mengutip","sampah","di sekolah"],"Murid mengutip sampah di sekolah.","🏫"],
+["Lengkapkan: Penduduk ______ pokok di taman.",["menanam","makanan","jiran","pasar"],"menanam","🌳"],
+["Lengkapkan: Jiran membantu ______ di pasar.",["warga emas","membersihkan","pokok","Ahad"],"warga emas","🤲"],
+["Berdasarkan gambar, bina ayat SiKOP.",["Kanak-kanak membersihkan taman.","Kanak-kanak taman membersihkan.","Membersihkan kanak-kanak taman.","Taman kanak-kanak membersihkan."],"Kanak-kanak membersihkan taman.","🧹"],
+["Berdasarkan gambar, bina ayat tentang menanam pokok.",["Penduduk menanam pokok di taman.","Pokok menanam penduduk.","Menanam penduduk pokok.","Taman pokok penduduk."],"Penduduk menanam pokok di taman.","🌱"],
+["Susun unsur: jiran / membantu / warga emas / di pasar.",["jiran","membantu","warga emas","di pasar"],"Jiran membantu warga emas di pasar.","🛍️"],
+["Baiki ayat: “Membersihkan penduduk taman.”",["Penduduk membersihkan taman.","Membersihkan taman penduduk.","Taman membersihkan penduduk.","Penduduk taman membersihkan."],"Penduduk membersihkan taman.","🛠️"],
+["Baiki: “Murid sampah mengutip di sekolah.”",["Murid mengutip sampah di sekolah.","Sampah murid mengutip di sekolah.","Murid di sekolah sampah mengutip.","Mengutip murid sampah sekolah."],"Murid mengutip sampah di sekolah.","🛠️"],
+["Pilih susunan SiKOP bagi gambar membersihkan longkang.",["Penduduk-membersihkan-longkang-di kampung","Longkang-penduduk-membersihkan-kampung","Membersihkan-penduduk-kampung-longkang","Kampung-longkang-penduduk-membersihkan"],0,"🧹"],
+["“Jiran membawa makanan ke rumah warga emas.” Apakah K?",["Jiran","membawa","makanan","ke rumah warga emas"],1,"🍱"],
+["🎲 Dadu Aplikasi: bina ayat berdasarkan situasi.",["Murid membantu guru membawa buku.","Murid buku guru membantu.","Guru membawa murid buku.","Buku membantu murid guru."],"Murid membantu guru membawa buku.","📚"],
+["Pilih kata kerja yang sesuai: Penduduk ______ taman.",["membersihkan","taman","penduduk","Ahad"],0,"🎯"],
+["Pilih kata kerja yang sesuai: Jiran ______ warga emas.",["menolong","warga emas","pasar","jiran"],0,"🤝"],
+["Pertahanan Kubu: “Penduduk sampah membersihkan taman.” Perkataan yang perlu disusun semula ialah…",["Penduduk","sampah","membersihkan","taman"],1,"🛡️"],
+["🚀 Roket Ayat: pilih ayat yang betul.",["Jiran menyediakan makanan untuk majlis kejiranan.","Makanan menyediakan jiran majlis.","Jiran makanan menyediakan kejiranan.","Majlis jiran makanan menyediakan."],0,"🚀"],
+["🎡 Roda SiKOP: Si=Murid, K=membantu, O=guru, P=di sekolah. Pilih ayat.",["Murid membantu guru di sekolah.","Guru membantu murid sekolah di.","Di sekolah guru murid membantu.","Membantu sekolah murid guru."],0,"🎡"],
+["Pilih ayat yang sepadan dengan gambar penduduk menanam pokok.",["Penduduk menanam pokok.","Pokok menanam penduduk.","Penduduk pokok menanam.","Menanam pokok penduduk."],0,"🌳"],
+["🛡️ Cabaran akhir: komuniti membersihkan kawasan selepas hujan lebat.",["Penduduk membersihkan kawasan selepas hujan lebat.","Hujan membersihkan penduduk kawasan.","Kawasan penduduk hujan membersihkan.","Membersihkan hujan penduduk kawasan."],0,"🌧️"]
+]},
+{title:"👑 MISI 3 — KERAJAAN CIPTA",type:"create",qs:[
+["Bina ayat berdasarkan gambar gotong-royong.","Penduduk membersihkan taman bersama-sama.","🧹"],
+["Bina ayat berdasarkan gambar kanak-kanak membantu warga emas.","Kanak-kanak membantu warga emas di pasar.","🤝"],
+["Bina ayat tentang jiran berkongsi makanan.","Jiran berkongsi makanan di balai raya.","🍱"],
+["Bina ayat tentang murid menanam pokok.","Murid menanam pokok di sekolah.","🌱"],
+["Bina ayat tentang penduduk membersihkan sungai.","Penduduk membersihkan sungai pada hari Sabtu.","🌊"],
+["Jiran kamu sakit dan memerlukan bantuan. Bina ayat yang sesuai.","Jiran membantu keluarga yang sakit di rumah.","🏠"],
+["Bina ayat tentang aktiviti gotong-royong dengan tempat atau masa.","Penduduk bergotong-royong di taman pada pagi Ahad.","🧹"],
+["Roda SiKOP: Penduduk / membantu / kanak-kanak / di taman. Bina ayat.","Penduduk membantu kanak-kanak di taman.","🎡"],
+["Roda SiKOP: Jiran / menyediakan / makanan / untuk majlis kejiranan.","Jiran menyediakan makanan untuk majlis kejiranan.","🍲"],
+["Bina ayat berdasarkan gambar komuniti yang bekerjasama.","Penduduk bekerjasama mencantikkan kampung.","🏘️"],
+["Bina ayat yang menunjukkan perpaduan masyarakat.","Penduduk pelbagai kaum bekerjasama membersihkan taman.","🤝"],
+["Murid membantu guru membawa buku. Bina ayat lengkap.","Murid membantu guru membawa buku di sekolah.","📚"],
+["Skrol Diraja: bina ayat tentang menjaga kebersihan kawasan awam.","Penduduk menjaga kebersihan kawasan awam.","🏞️"],
+["Skrol Diraja: bina ayat tentang kerjasama kejiranan.","Jiran bekerjasama membersihkan kawasan perumahan.","🏘️"],
+["Cabaran Raja: bina ayat berdasarkan situasi selepas hujan lebat.","Penduduk membersihkan jalan selepas hujan lebat.","🌧️"],
+["Kristal Kreativiti: jiran membantu memindahkan barang.","Jiran membantu keluarga memindahkan barang ke rumah baharu.","📦"],
+["Cabaran Wira: taman permainan kotor. Apakah tindakan masyarakat?","Penduduk membersihkan taman permainan bersama-sama.","🛝"],
+["Bina ayat tentang gotong-royong sekolah dan komuniti.","Murid dan penduduk bekerjasama membersihkan sekolah.","🏫"],
+["Bina ayat tentang kanak-kanak dan orang dewasa menanam pokok.","Kanak-kanak dan orang dewasa menanam pokok bersama-sama.","🌳"],
+["CABARAN AKHIR: seluruh komuniti bekerjasama mencantikkan kampung.","Seluruh komuniti bekerjasama mencantikkan kampung pada hujung minggu.","👑"]
+]}
+];
+
+let state={name:"",score:0,lives:3,crystals:0,mission:0,q:0,done:[false,false,false],attempts:0};
+function save(){localStorage.setItem("sikopState",JSON.stringify(state))}
+function load(){try{let x=JSON.parse(localStorage.getItem("sikopState"));if(x)state=x}catch(e){}}
+function show(id){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");renderHud()}
+function start(){let n=document.getElementById("nameInput").value.trim();if(!n){document.getElementById("nameError").innerHTML='<div class="feedback bad">⚠️ Sila masukkan nama wira terlebih dahulu.</div>';return}state={name:n,score:0,lives:3,crystals:0,mission:0,q:0,done:[false,false,false],attempts:0};save();show("map")}
+function renderHud(){let h=`<div class="stat">👤 <b>${state.name||"Wira"}</b></div><div class="stat">⭐ <b>${state.score}</b></div><div class="stat">❤️ <b>${state.lives}</b></div><div class="stat">💎 <b>${state.crystals}</b></div><div class="stat">📊 <b>${totalDone()}/60</b></div>`;document.getElementById("hud").innerHTML=h;document.getElementById("gameHud").innerHTML=h;document.getElementById("bar").style.width=(totalDone()/60*100)+"%"}
+function totalDone(){let n=0;state.done.forEach((d,i)=>{if(d)n+=20});return n}
+function openMission(i){if(i>0&&!state.done[i-1]){alert("⚠️ Selesaikan misi sebelumnya dahulu, Wira SiKOP!");return}state.mission=i;state.q=0;state.attempts=0;show("game");renderQuestion()}
+function renderQuestion(){let m=missions[state.mission], q=m.qs[state.q];document.getElementById("missionTitle").innerHTML=`<h2>${m.title}</h2><p>Cabaran ${state.q+1}/20 · Kemajuan keseluruhan ${totalDone()+state.q}/60</p>`;document.getElementById("qbar").style.width=((state.q)/20*100)+"%";let a=document.getElementById("questionArea");a.innerHTML="";
+if(m.type==="mcq"){a.innerHTML=`<div class="imagebox">${q[3]}</div><div class="question">${q[0]}</div><div class="choices">${q[1].map((x,i)=>`<button class="choice" onclick="checkMCQ(${i})">${x}</button>`).join("")}</div><div id="fb"></div>`}
+else if(m.type==="sort"){a.innerHTML=`<div class="imagebox">${q[3]}</div><div class="question">${q[0]}</div><div class="choices">${q[1].map((x,i)=>`<button class="choice" onclick="selectWord('${escapeQ(x)}',this)">${x}</button>`).join("")}</div><div class="answer" id="answer"></div><button class="primary" onclick="checkSort()">✅ SEMAK AYAT</button><div id="fb"></div>`}
+else {a.innerHTML=`<div class="imagebox">${q[2]}</div><div class="question">${q[0]}</div><input class="textanswer" id="typed" placeholder="Taip ayat kamu di sini..."><p>🔎 Semak: huruf besar pada awal ayat · noktah pada akhir ayat · SiKOP · sesuai dengan situasi</p><button class="primary" onclick="checkCreate()">🚀 HANTAR JAWAPAN</button><div id="fb"></div>`}
+renderHud()}
+let selected=[];
+function escapeQ(s){return s.replace(/'/g,"&#39;")}
+function selectWord(w,el){if(selected.includes(w))return;selected.push(w);el.disabled=true;document.getElementById("answer").innerHTML=selected.map(x=>`<span class="word">${x}</span>`).join("")}
+function normalize(s){return s.trim().replace(/\s+/g," ").toLowerCase()}
+function next(correct){if(correct){state.score+=10;state.crystals++;}else{state.lives=Math.max(0,state.lives-0)}state.q++;state.attempts=0;selected=[];save();if(state.q>=20){state.done[state.mission]=true;save();if(state.mission<2){show("map");document.getElementById("loc2").classList.toggle("locked",!state.done[0]);document.getElementById("loc3").classList.toggle("locked",!state.done[1])}else finish()}else renderQuestion()}
+function checkMCQ(i){let q=missions[state.mission].qs[state.q];let fb=document.getElementById("fb");if(i===q[2]){fb.innerHTML='<div class="feedback good">✅ Hebat! Jawapan kamu tepat! ⭐ +10 MATA</div><button class="primary" onclick="next(true)">➡️ TERUSKAN</button>'}else{fb.innerHTML='<div class="feedback bad">❌ Belum tepat, Wira SiKOP!</div><div class="feedback hint">💡 PETUNJUK: Cari unsur yang sepadan dengan fungsi atau tindakan dalam soalan.</div><button class="secondary" onclick="renderQuestion()">🔄 JAWAB SEMULA</button>'}}
+function checkSort(){let q=missions[state.mission].qs[state.q], ans=selected.join(" ");let target=q[2];let ok=normalize(ans)===normalize(target)||normalize(ans.replace(/ /g," "))===normalize(target);let fb=document.getElementById("fb");if(ok){fb.innerHTML='<div class="feedback good">✅ Hebat! Susunan kamu betul! ⭐ +10 MATA</div><button class="primary" onclick="next(true)">➡️ TERUSKAN</button>'}else{fb.innerHTML='<div class="feedback bad">❌ Belum tepat!</div><div class="feedback hint">💡 PETUNJUK: Susun mengikut Si → K → O → P dan pastikan ayat bermula huruf besar serta berakhir dengan noktah.</div><button class="secondary" onclick="selected=[];renderQuestion()">🔄 JAWAB SEMULA</button>'}}
+function checkCreate(){let q=missions[2].qs[state.q],v=document.getElementById("typed").value.trim(),fb=document.getElementById("fb");let cap=/^[A-ZÀ-Ý]/.test(v),dot=/\.$/.test(v),words=v.split(/\s+/).filter(Boolean).length>=3,meaning=words;if(!cap&&!dot){fb.innerHTML='<div class="feedback bad">⚠️ Semak semula ayat kamu. Mulakan dengan huruf besar dan akhiri dengan noktah.</div><div class="feedback hint">💡 PETUNJUK: Fikirkan siapa, perbuatan, objek dan penerangan.</div><button class="secondary" onclick="document.getElementById(\'typed\').focus()">🔄 JAWAB SEMULA</button>';return}if(!cap){fb.innerHTML='<div class="feedback bad">⚠️ Cuba semula! Pastikan ayat kamu bermula dengan huruf besar.</div><button class="secondary" onclick="document.getElementById(\'typed\').focus()">🔄 JAWAB SEMULA</button>';return}if(!dot){fb.innerHTML='<div class="feedback bad">⚠️ Hampir betul! Jangan lupa letakkan noktah (.) di akhir ayat.</div><button class="secondary" onclick="document.getElementById(\'typed\').focus()">🔄 JAWAB SEMULA</button>';return}if(words){fb.innerHTML='<div class="feedback good">✅ Hebat! Penulisan ayat kamu sudah betul. ⭐ +10 MATA</div><button class="primary" onclick="next(true)">➡️ TERUSKAN</button>'}}
+function finish(){show("finish");document.getElementById("report").innerHTML=`<p>👤 Wira: <b>${state.name}</b></p><p>🧠 Kerajaan Ingat: ${state.done[0]?"Selesai":"Belum"}</p><p>⚔️ Kerajaan Aplikasi: ${state.done[1]?"Selesai":"Belum"}</p><p>👑 Kerajaan Cipta: ${state.done[2]?"Selesai":"Belum"}</p><h2>⭐ ${state.score} Mata · 💎 ${state.crystals} Kristal</h2>`;document.getElementById("badges").innerHTML='<div class="badge">🏅 Wira Ingat</div><div class="badge">🏅 Wira Aplikasi</div><div class="badge">🏅 Master Cipta</div><div class="badge">👑 Penyelamat Kerajaan SiKOP</div>'}
+load();if(state.name)document.getElementById("nameInput").value=state.name;renderHud();
+</script>
+</body></html>
